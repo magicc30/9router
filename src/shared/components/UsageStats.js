@@ -37,6 +37,10 @@ function TimeAgo({ timestamp }) {
   return <>{timeAgo(timestamp)}</>;
 }
 
+function fmtPercent(value) {
+  return `${(value || 0).toFixed(1)}%`;
+}
+
 function RecentRequests({ requests = [] }) {
   return (
     <Card className="flex min-w-0 flex-col overflow-hidden" padding="sm" style={{ height: 480 }}>
@@ -49,12 +53,13 @@ function RecentRequests({ requests = [] }) {
         <div className="flex-1 flex items-center justify-center text-text-muted text-sm">No requests yet.</div>
       ) : (
         <div className="flex-1 overflow-y-auto">
-          <table className="w-full min-w-[300px] border-collapse text-xs">
+          <table className="w-full min-w-[360px] border-collapse text-xs">
             <thead className="sticky top-0 bg-bg z-10">
               <tr className="border-b border-border">
                 <th className="py-1.5 text-left font-semibold text-text-muted w-2"></th>
                 <th className="py-1.5 text-left font-semibold text-text-muted">Model</th>
                 <th className="py-1.5 text-right font-semibold text-text-muted whitespace-nowrap">In / Out</th>
+                <th className="py-1.5 text-right font-semibold text-text-muted whitespace-nowrap">Cache</th>
                 <th className="py-1.5 text-right font-semibold text-text-muted">When</th>
               </tr>
             </thead>
@@ -72,6 +77,10 @@ function RecentRequests({ requests = [] }) {
                       {" "}
                       <span className="text-success">{fmt(r.completionTokens)}↓</span>
                     </td>
+                    <td className="py-1.5 text-right whitespace-nowrap font-mono">
+                      <span className="text-primary">{fmt(r.cacheReadTokens || 0)}</span>
+                      <span className="ml-1 text-text-muted">{fmtPercent(r.cacheHitRate || 0)}</span>
+                    </td>
                     <td className="py-1.5 text-right text-text-muted whitespace-nowrap"><TimeAgo timestamp={r.timestamp} /></td>
                   </tr>
                 );
@@ -88,10 +97,13 @@ function sortData(dataMap, pendingMap = {}, sortBy, sortOrder) {
   return Object.entries(dataMap || {})
     .map(([key, data]) => {
       const totalTokens = (data.promptTokens || 0) + (data.completionTokens || 0);
+      const cacheReadTokens = data.cacheReadTokens || 0;
+      const cacheCreationTokens = data.cacheCreationTokens || 0;
+      const cacheHitRate = data.cacheHitRate ?? ((data.promptTokens || 0) > 0 ? (cacheReadTokens / data.promptTokens) * 100 : 0);
       const totalCost = data.cost || 0;
       const inputCost = totalTokens > 0 ? (data.promptTokens || 0) * (totalCost / totalTokens) : 0;
       const outputCost = totalTokens > 0 ? (data.completionTokens || 0) * (totalCost / totalTokens) : 0;
-      return { ...data, key, totalTokens, totalCost, inputCost, outputCost, pending: pendingMap[key] || 0 };
+      return { ...data, key, totalTokens, cacheReadTokens, cacheCreationTokens, cacheHitRate, totalCost, inputCost, outputCost, pending: pendingMap[key] || 0 };
     })
     .sort((a, b) => {
       let valA = a[sortBy];
@@ -122,7 +134,7 @@ function groupDataByKey(data, keyField) {
     if (!groups[gk]) {
       groups[gk] = {
         groupKey: gk,
-        summary: { requests: 0, promptTokens: 0, completionTokens: 0, totalTokens: 0, cost: 0, inputCost: 0, outputCost: 0, lastUsed: null, pending: 0 },
+        summary: { requests: 0, promptTokens: 0, completionTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, cacheHitRate: 0, totalTokens: 0, cost: 0, inputCost: 0, outputCost: 0, lastUsed: null, pending: 0 },
         items: [],
       };
     }
@@ -130,7 +142,10 @@ function groupDataByKey(data, keyField) {
     s.requests += item.requests || 0;
     s.promptTokens += item.promptTokens || 0;
     s.completionTokens += item.completionTokens || 0;
+    s.cacheReadTokens += item.cacheReadTokens || 0;
+    s.cacheCreationTokens += item.cacheCreationTokens || 0;
     s.totalTokens += item.totalTokens || 0;
+    s.cacheHitRate = s.promptTokens > 0 ? (s.cacheReadTokens / s.promptTokens) * 100 : 0;
     s.cost += item.cost || 0;
     s.inputCost += item.inputCost || 0;
     s.outputCost += item.outputCost || 0;

@@ -84,8 +84,26 @@ function CollapsibleSection({ title, children, defaultOpen = false, icon = null 
 
 function getInputTokens(tokens) {
   const prompt = tokens?.prompt_tokens || tokens?.input_tokens || 0;
-  const cache = tokens?.cached_tokens || tokens?.cache_read_input_tokens || 0;
+  const cache = getCacheReadTokens(tokens);
   return prompt < cache ? cache : prompt;
+}
+
+function getCacheReadTokens(tokens) {
+  return tokens?.cache_read_input_tokens || tokens?.cached_tokens || tokens?.prompt_tokens_details?.cached_tokens || 0;
+}
+
+function getCacheCreationTokens(tokens) {
+  return tokens?.cache_creation_input_tokens || tokens?.prompt_tokens_details?.cache_creation_tokens || 0;
+}
+
+function getCacheHitRate(tokens) {
+  const input = tokens?.prompt_tokens || tokens?.input_tokens || 0;
+  if (!input) return 0;
+  return (getCacheReadTokens(tokens) / input) * 100;
+}
+
+function fmtPercent(value) {
+  return `${(value || 0).toFixed(1)}%`;
 }
 
 export default function RequestDetailsTab() {
@@ -238,7 +256,7 @@ export default function RequestDetailsTab() {
 
       <Card padding="none">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px]">
+          <table className="w-full min-w-[980px]">
             <thead>
               <tr className="border-b border-black/5 dark:border-white/5">
                 <th className="text-left p-4 text-sm font-semibold text-text-main">Timestamp</th>
@@ -246,6 +264,7 @@ export default function RequestDetailsTab() {
                 <th className="text-left p-4 text-sm font-semibold text-text-main">Provider</th>
                 <th className="text-right p-4 text-sm font-semibold text-text-main">Input Tokens</th>
                 <th className="text-right p-4 text-sm font-semibold text-text-main">Output Tokens</th>
+                <th className="text-right p-4 text-sm font-semibold text-text-main">Cache Hit</th>
                 <th className="text-left p-4 text-sm font-semibold text-text-main">Latency</th>
                 <th className="text-center p-4 text-sm font-semibold text-text-main">Action</th>
               </tr>
@@ -253,7 +272,7 @@ export default function RequestDetailsTab() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-text-muted">
+                  <td colSpan="8" className="p-8 text-center text-text-muted">
                     <div className="flex items-center justify-center gap-2">
                       <span className="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>
                       Loading...
@@ -262,7 +281,7 @@ export default function RequestDetailsTab() {
                 </tr>
               ) : details.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="p-8 text-center text-text-muted">
+                  <td colSpan="8" className="p-8 text-center text-text-muted">
                     No request details found
                   </td>
                 </tr>
@@ -287,7 +306,13 @@ export default function RequestDetailsTab() {
                       {getInputTokens(detail.tokens).toLocaleString()}
                     </td>
                     <td className="p-4 text-sm text-text-main text-right font-mono">
-                      {detail.tokens?.completion_tokens?.toLocaleString() || 0}
+                      {detail.tokens?.completion_tokens?.toLocaleString() || detail.tokens?.output_tokens?.toLocaleString() || 0}
+                    </td>
+                    <td className="p-4 text-sm text-right font-mono">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-primary">{getCacheReadTokens(detail.tokens).toLocaleString()}</span>
+                        <span className="text-[11px] text-text-muted">{fmtPercent(getCacheHitRate(detail.tokens))}</span>
+                      </div>
                     </td>
                     <td className="p-4 text-sm text-text-muted">
                       <div className="flex flex-col gap-0.5">
@@ -373,7 +398,25 @@ export default function RequestDetailsTab() {
               <div>
                 <span className="text-text-muted">Output Tokens:</span>{" "}
                 <span className="text-text-main font-mono">
-                  {selectedDetail.tokens?.completion_tokens?.toLocaleString() || 0}
+                  {selectedDetail.tokens?.completion_tokens?.toLocaleString() || selectedDetail.tokens?.output_tokens?.toLocaleString() || 0}
+                </span>
+              </div>
+              <div>
+                <span className="text-text-muted">Cache Read:</span>{" "}
+                <span className="text-text-main font-mono">
+                  {getCacheReadTokens(selectedDetail.tokens).toLocaleString()}
+                </span>
+              </div>
+              <div>
+                <span className="text-text-muted">Cache Creation:</span>{" "}
+                <span className="text-text-main font-mono">
+                  {getCacheCreationTokens(selectedDetail.tokens).toLocaleString()}
+                </span>
+              </div>
+              <div>
+                <span className="text-text-muted">Cache Hit Rate:</span>{" "}
+                <span className="text-text-main font-mono">
+                  {fmtPercent(getCacheHitRate(selectedDetail.tokens))}
                 </span>
               </div>
             </div>

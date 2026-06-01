@@ -168,4 +168,47 @@ describe("DB Concurrency — atomic safety", () => {
     expect(g.promptTokens).toBe(N * 100);
     expect(g.completionTokens).toBe(N * 50);
   });
+
+  it("aggregates cache token usage and hit rate in live and daily stats", async () => {
+    await db.saveRequestUsage({
+      provider: "cache-test", model: "cache-model", connectionId: "cache-conn", apiKey: "cache-key",
+      endpoint: "/v1/chat/completions",
+      tokens: {
+        prompt_tokens: 100,
+        completion_tokens: 20,
+        cache_read_input_tokens: 40,
+        cache_creation_input_tokens: 10,
+      },
+      status: "ok",
+    });
+    await db.saveRequestUsage({
+      provider: "cache-test", model: "cache-model", connectionId: "cache-conn", apiKey: "cache-key",
+      endpoint: "/v1/chat/completions",
+      tokens: {
+        prompt_tokens: 50,
+        completion_tokens: 10,
+        cached_tokens: 5,
+      },
+      status: "ok",
+    });
+
+    for (const period of ["24h", "7d"]) {
+      const stats = await db.getUsageStats(period);
+      const provider = stats.byProvider["cache-test"];
+      const model = stats.byModel["cache-model (cache-test)"];
+      const endpoint = stats.byEndpoint["/v1/chat/completions|cache-model|cache-test"];
+
+      expect(stats.totalCacheReadTokens).toBeGreaterThanOrEqual(45);
+      expect(stats.totalCacheCreationTokens).toBeGreaterThanOrEqual(10);
+      expect(stats.cacheHitRate).toBeGreaterThanOrEqual(30);
+
+      expect(provider.cacheReadTokens).toBe(45);
+      expect(provider.cacheCreationTokens).toBe(10);
+      expect(provider.cacheHitRate).toBe(30);
+      expect(model.cacheReadTokens).toBe(45);
+      expect(model.cacheCreationTokens).toBe(10);
+      expect(endpoint.cacheReadTokens).toBe(45);
+      expect(endpoint.cacheHitRate).toBe(30);
+    }
+  });
 });

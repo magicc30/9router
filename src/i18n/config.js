@@ -38,106 +38,47 @@ export const LOCALE_NAMES = {
   "no": "Norsk"
 };
 
+const LOCALE_LOOKUP = new Map(LOCALES.map((locale) => [locale.toLowerCase(), locale]));
+
+const LOCALE_ALIASES = {
+  zh: "zh-CN",
+  "zh-hans": "zh-CN",
+  "zh-hans-cn": "zh-CN",
+  "zh-cn": "zh-CN",
+  "zh-sg": "zh-CN",
+  "zh-hant": "zh-TW",
+  "zh-hant-tw": "zh-TW",
+  "zh-tw": "zh-TW",
+  "zh-hk": "zh-TW",
+  "zh-mo": "zh-TW",
+};
+
 export function normalizeLocale(locale) {
-  if (locale === "zh" || locale === "zh-CN") {
-    return "zh-CN";
+  if (typeof locale !== "string") {
+    return DEFAULT_LOCALE;
   }
-  if (locale === "en") {
-    return "en";
+
+  const normalized = locale.trim().replaceAll("_", "-").toLowerCase();
+  if (!normalized) {
+    return DEFAULT_LOCALE;
   }
-  if (locale === "vi") {
-    return "vi";
+
+  if (LOCALE_ALIASES[normalized]) {
+    return LOCALE_ALIASES[normalized];
   }
-  if (locale === "zh-TW") {
-    return "zh-TW";
+
+  if (LOCALE_LOOKUP.has(normalized)) {
+    return LOCALE_LOOKUP.get(normalized);
   }
-  if (locale === "ja") {
-    return "ja";
+
+  const [language] = normalized.split("-");
+  if (LOCALE_ALIASES[language]) {
+    return LOCALE_ALIASES[language];
   }
-  if (locale === "pt-BR") {
-    return "pt-BR";
+  if (LOCALE_LOOKUP.has(language)) {
+    return LOCALE_LOOKUP.get(language);
   }
-  if (locale === "pt-PT") {
-    return "pt-PT";
-  }
-  if (locale === "ko") {
-    return "ko";
-  }
-  if (locale === "es") {
-    return "es";
-  }
-  if (locale === "de") {
-    return "de";
-  }
-  if (locale === "fr") {
-    return "fr";
-  }
-  if (locale === "he") {
-    return "he";
-  }
-  if (locale === "ar") {
-    return "ar";
-  }
-  if (locale === "ru") {
-    return "ru";
-  }
-  if (locale === "pl") {
-    return "pl";
-  }
-  if (locale === "cs") {
-    return "cs";
-  }
-  if (locale === "nl") {
-    return "nl";
-  }
-  if (locale === "tr") {
-    return "tr";
-  }
-  if (locale === "uk") {
-    return "uk";
-  }
-  if (locale === "tl") {
-    return "tl";
-  }
-  if (locale === "id") {
-    return "id";
-  }
-  if (locale === "th") {
-    return "th";
-  }
-  if (locale === "hi") {
-    return "hi";
-  }
-  if (locale === "bn") {
-    return "bn";
-  }
-  if (locale === "ur") {
-    return "ur";
-  }
-  if (locale === "ro") {
-    return "ro";
-  }
-  if (locale === "sv") {
-    return "sv";
-  }
-  if (locale === "it") {
-    return "it";
-  }
-  if (locale === "el") {
-    return "el";
-  }
-  if (locale === "hu") {
-    return "hu";
-  }
-  if (locale === "fi") {
-    return "fi";
-  }
-  if (locale === "da") {
-    return "da";
-  }
-  if (locale === "no") {
-    return "no";
-  }
+
   return DEFAULT_LOCALE;
 }
 

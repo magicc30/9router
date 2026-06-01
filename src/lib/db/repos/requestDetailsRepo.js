@@ -141,6 +141,17 @@ export async function saveRequestDetail(detail) {
   }
 }
 
+function isZeroTokenStreamingSnapshot(detail) {
+  const tokens = detail?.tokens || {};
+  const promptTokens = tokens.prompt_tokens || tokens.input_tokens || tokens.promptTokens || 0;
+  const completionTokens = tokens.completion_tokens || tokens.output_tokens || tokens.completionTokens || 0;
+  const responseContent = detail?.response?.content;
+
+  return promptTokens === 0
+    && completionTokens === 0
+    && responseContent === "[Streaming in progress...]";
+}
+
 export async function getRequestDetails(filter = {}) {
   const db = await getAdapter();
   const conds = [];
@@ -154,19 +165,21 @@ export async function getRequestDetails(filter = {}) {
   if (filter.endDate) { conds.push("timestamp <= ?"); params.push(new Date(filter.endDate).toISOString()); }
 
   const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
-  const cntRow = db.get(`SELECT COUNT(*) as c FROM requestDetails ${where}`, params);
-  const totalItems = cntRow ? cntRow.c : 0;
+  const rows = db.all(
+    `SELECT data FROM requestDetails ${where} ORDER BY timestamp DESC`,
+    params
+  );
+
+  const allDetails = rows
+    .map((r) => parseJson(r.data, {}))
+    .filter((detail) => !isZeroTokenStreamingSnapshot(detail));
 
   const page = filter.page || 1;
   const pageSize = filter.pageSize || 50;
+  const totalItems = allDetails.length;
   const totalPages = Math.ceil(totalItems / pageSize);
   const offset = (page - 1) * pageSize;
-
-  const rows = db.all(
-    `SELECT data FROM requestDetails ${where} ORDER BY timestamp DESC LIMIT ? OFFSET ?`,
-    [...params, pageSize, offset]
-  );
-  const details = rows.map((r) => parseJson(r.data, {}));
+  const details = allDetails.slice(offset, offset + pageSize);
 
   return {
     details,

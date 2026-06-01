@@ -7,6 +7,7 @@ import Badge from "@/shared/components/Badge";
 
 const fmt = (n) => new Intl.NumberFormat().format(n || 0);
 const fmtCost = (n) => `$${(n || 0).toFixed(2)}`;
+const fmtPercent = (n) => `${(n || 0).toFixed(1)}%`;
 
 function fmtTime(iso) {
   if (!iso) return "Never";
@@ -40,6 +41,12 @@ function ValueCells({ item, viewMode, isSummary = false }) {
         </td>
         <td className="px-6 py-3 text-right text-text-muted">
           {isSummary && item.completionTokens === undefined ? "—" : fmt(item.completionTokens)}
+        </td>
+        <td className="px-6 py-3 text-right text-primary">
+          {fmt(item.cacheReadTokens)}
+        </td>
+        <td className="px-6 py-3 text-right font-medium text-success">
+          {fmtPercent(item.cacheHitRate)}
         </td>
         <td className="px-6 py-3 text-right font-medium">
           {fmt(item.totalTokens)}
@@ -134,6 +141,8 @@ export default function UsageTable({
       return [
         { field: "promptTokens", label: "Input Tokens" },
         { field: "completionTokens", label: "Output Tokens" },
+        { field: "cacheReadTokens", label: "Cache Read" },
+        { field: "cacheHitRate", label: "Hit Rate" },
         { field: "totalTokens", label: "Total Tokens" },
       ];
     }

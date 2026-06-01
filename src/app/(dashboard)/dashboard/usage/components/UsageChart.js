@@ -46,7 +46,7 @@ export default function UsageChart({ period = "7d" }) {
     fetchData();
   }, [fetchData]);
 
-  const hasData = data.some((d) => d.tokens > 0 || d.cost > 0);
+  const hasData = data.some((d) => d.tokens > 0 || d.promptTokens > 0 || d.completionTokens > 0 || d.cacheReadTokens > 0 || d.cost > 0);
 
   return (
     <Card className="flex min-w-0 flex-col gap-3 p-3 sm:p-4">
@@ -77,6 +77,14 @@ export default function UsageChart({ period = "7d" }) {
                 <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
                 <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
               </linearGradient>
+              <linearGradient id="gradCompletionTokens" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradCacheTokens" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+              </linearGradient>
               <linearGradient id="gradCost" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.25} />
                 <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
@@ -104,20 +112,49 @@ export default function UsageChart({ period = "7d" }) {
                 borderRadius: "8px",
                 fontSize: "12px",
               }}
-              formatter={(value, name) =>
-                name === "tokens" ? [fmtTokens(value), "Tokens"] : [fmtCost(value), "Cost"]
-              }
+              formatter={(value, name) => {
+                const tokenLabels = {
+                  promptTokens: "输入合计",
+                  completionTokens: "输出合计",
+                  cacheReadTokens: "命中合计",
+                };
+                if (viewMode === "tokens") return [fmtTokens(value), tokenLabels[name] || name];
+                return [fmtCost(value), "Cost"];
+              }}
             />
             {viewMode === "tokens" ? (
-              <Area
-                type="monotone"
-                dataKey="tokens"
-                stroke="#6366f1"
-                strokeWidth={2}
-                fill="url(#gradTokens)"
-                dot={false}
-                activeDot={{ r: 4 }}
-              />
+              <>
+                <Area
+                  type="monotone"
+                  dataKey="promptTokens"
+                  name="输入合计"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  fill="url(#gradTokens)"
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="completionTokens"
+                  name="输出合计"
+                  stroke="#22c55e"
+                  strokeWidth={2}
+                  fill="url(#gradCompletionTokens)"
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="cacheReadTokens"
+                  name="命中合计"
+                  stroke="#06b6d4"
+                  strokeWidth={2}
+                  fill="url(#gradCacheTokens)"
+                  dot={false}
+                  activeDot={{ r: 4 }}
+                />
+              </>
             ) : (
               <Area
                 type="monotone"
