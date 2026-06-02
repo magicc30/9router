@@ -601,7 +601,7 @@
   "Save": "保存",
   "Save Changes": "保存更改",
   "Saving": "保存中",
-  "Importing...": "导入中...",
+  "Importing...": "正在导入...",
   "Import": "导入",
   "Deploying... (may take ~1 min)": "部署中...（可能需要约 1 分钟）",
   "Deploy": "部署",
@@ -768,5 +768,9 @@
   "Close": "关闭",
   "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.": "⚠️ 风险提示：此提供商使用的订阅/OAuth 会话未获官方授权用于代理/路由器使用。账户可能被限制或封禁。使用风险自负。",
   "⚠️ MITM intercepts HTTPS traffic of IDE tools (Antigravity, GitHub Copilot, Kiro) via local CA to redirect requests to your providers. May violate ToS → account ban. Use at your own risk.": "⚠️ MITM 通过本地 CA 拦截 IDE 工具（Antigravity、GitHub Copilot、Kiro）的 HTTPS 流量，将请求重定向到您的提供商。可能违反 ToS → 账户封禁风险。使用风险自负。",
-  "Endpoint is exposed without an API key.": "端点未设置 API 密钥即对外暴露。"
+  "Import Accounts": "导入账号",
+  "Import failed": "导入失败",
+  "Import failed: invalid JSON file": "导入失败：JSON 文件无效",
+  "Imported {imported}/{total} Codex account(s).": "已导入 {imported}/{total} 个 Codex 账号。",
+  "Imported {imported}/{total} Codex account(s), {skipped} skipped.": "已导入 {imported}/{total} 个 Codex 账号，已跳过 {skipped} 个。"
 }

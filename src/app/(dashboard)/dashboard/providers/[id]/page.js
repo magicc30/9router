@@ -17,6 +17,7 @@ import ConnectionRow from "./ConnectionRow";
 import AddApiKeyModal from "./AddApiKeyModal";
 import EditCompatibleNodeModal from "./EditCompatibleNodeModal";
 import AddCustomModelModal from "./AddCustomModelModal";
+import { translate } from "@/i18n/runtime";
 
 const ONE_BY_ONE_DELAY_MS = 1000;
 
@@ -38,6 +39,7 @@ export default function ProviderDetailPage() {
   const [addConnectionError, setAddConnectionError] = useState("");
   const [importingCodexAccounts, setImportingCodexAccounts] = useState(false);
   const [codexImportMessage, setCodexImportMessage] = useState("");
+  const [codexImportStatus, setCodexImportStatus] = useState("");
   const codexImportInputRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
@@ -596,6 +598,7 @@ export default function ProviderDetailPage() {
 
   const handleCodexImportClick = () => {
     setCodexImportMessage("");
+    setCodexImportStatus("");
     codexImportInputRef.current?.click();
   };
 
@@ -606,6 +609,7 @@ export default function ProviderDetailPage() {
 
     setImportingCodexAccounts(true);
     setCodexImportMessage("");
+    setCodexImportStatus("");
 
     try {
       const text = await file.text();
@@ -613,7 +617,8 @@ export default function ProviderDetailPage() {
       try {
         payload = JSON.parse(text);
       } catch {
-        setCodexImportMessage("Import failed: invalid JSON file");
+        setCodexImportStatus("error");
+        setCodexImportMessage(translate("Import failed: invalid JSON file"));
         return;
       }
 
@@ -626,16 +631,26 @@ export default function ProviderDetailPage() {
 
       if (!res.ok) {
         const detail = data.errors?.[0]?.error ? `: ${data.errors[0].error}` : "";
-        setCodexImportMessage(`${data.error || "Import failed"}${detail}`);
+        setCodexImportStatus("error");
+        setCodexImportMessage(`${translate(data.error || "Import failed")}${detail}`);
         return;
       }
 
       await fetchConnections();
-      const skipped = data.skipped ? `, ${data.skipped} skipped` : "";
-      setCodexImportMessage(`Imported ${data.imported || 0}/${data.total || 0} Codex account(s)${skipped}.`);
+      const messageTemplate = data.skipped
+        ? translate("Imported {imported}/{total} Codex account(s), {skipped} skipped.")
+        : translate("Imported {imported}/{total} Codex account(s).");
+      setCodexImportStatus("success");
+      setCodexImportMessage(
+        messageTemplate
+          .replace("{imported}", data.imported || 0)
+          .replace("{total}", data.total || 0)
+          .replace("{skipped}", data.skipped || 0)
+      );
     } catch (error) {
       console.log("Error importing Codex accounts:", error);
-      setCodexImportMessage("Import failed");
+      setCodexImportStatus("error");
+      setCodexImportMessage(translate("Import failed"));
     } finally {
       setImportingCodexAccounts(false);
     }
@@ -1291,7 +1306,7 @@ export default function ProviderDetailPage() {
                 onChange={handleCodexImportFile}
               />
               {codexImportMessage && (
-                <div className={`mb-4 rounded-lg border px-3 py-2 text-xs ${codexImportMessage.startsWith("Imported") ? "border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400" : "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400"}`}>
+                <div className={`mb-4 rounded-lg border px-3 py-2 text-xs ${codexImportStatus === "success" ? "border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400" : "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400"}`}>
                   {codexImportMessage}
                 </div>
               )}
@@ -1413,7 +1428,7 @@ export default function ProviderDetailPage() {
                         onClick={handleCodexImportClick}
                         disabled={importingCodexAccounts}
                       >
-                        {importingCodexAccounts ? "Importing..." : "Import Accounts"}
+                        {translate(importingCodexAccounts ? "Importing..." : "Import Accounts")}
                       </Button>
                     )}
                     <Button
@@ -1491,7 +1506,7 @@ export default function ProviderDetailPage() {
                           disabled={importingCodexAccounts}
                           className="w-full sm:w-auto"
                         >
-                          {importingCodexAccounts ? "Importing..." : "Import Accounts"}
+                          {translate(importingCodexAccounts ? "Importing..." : "Import Accounts")}
                         </Button>
                       )}
                       <Button

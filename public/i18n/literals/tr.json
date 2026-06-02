@@ -191,5 +191,10 @@
   "Click to add, click again to remove. Changes are saved automatically.": "Eklemek için tıklayın, kaldırmak için tekrar tıklayın. Değişiklikler otomatik olarak kaydedilir.",
   "⚠️ Risk Notice: This provider uses a subscription/OAuth session not officially licensed for proxy/router use. Account may be restricted or banned. Use at your own risk.": "⚠️ Risk Bildirimi: Bu sağlayıcı, proxy/yönlendirici kullanımı için resmi olarak lisanslı olmayan bir abonelik/OAuth oturumu kullanır. Hesap kısıtlanabilir veya yasaklanabilir. Kendi sorumluluğunuzda kullanın.",
   "⚠️ MITM intercepts HTTPS traffic of IDE tools (Antigravity, GitHub Copilot, Kiro) via local CA to redirect requests to your providers. May violate ToS → account ban. Use at your own risk.": "⚠️ MITM, isteklerinizi sağlayıcılarınıza yönlendirmek için yerel CA aracılığıyla IDE araçlarının (Antigravity, GitHub Copilot, Kiro) HTTPS trafiğini engeller. ToS'u ihlal edebilir → hesap yasaklama riski. Kendi sorumluluğunuzda kullanın.",
-  "Endpoint is exposed without an API key.": "Uç nokta API anahtarı olmadan açıkta."
+  "Import Accounts": "Hesapları içe aktar",
+  "Importing...": "İçe aktarılıyor...",
+  "Import failed": "İçe aktarma başarısız",
+  "Import failed: invalid JSON file": "İçe aktarma başarısız: geçersiz JSON dosyası",
+  "Imported {imported}/{total} Codex account(s).": "{imported}/{total} Codex hesabı içe aktarıldı.",
+  "Imported {imported}/{total} Codex account(s), {skipped} skipped.": "{imported}/{total} Codex hesabı içe aktarıldı, {skipped} atlandı."
 }
