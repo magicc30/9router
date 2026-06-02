@@ -36,6 +36,9 @@ export default function ProviderDetailPage() {
   const [showIFlowCookieModal, setShowIFlowCookieModal] = useState(false);
   const [showAddApiKeyModal, setShowAddApiKeyModal] = useState(false);
   const [addConnectionError, setAddConnectionError] = useState("");
+  const [importingCodexAccounts, setImportingCodexAccounts] = useState(false);
+  const [codexImportMessage, setCodexImportMessage] = useState("");
+  const codexImportInputRef = useRef(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showEditNodeModal, setShowEditNodeModal] = useState(false);
   const [showBulkProxyModal, setShowBulkProxyModal] = useState(false);
@@ -589,6 +592,53 @@ export default function ProviderDetailPage() {
   const handleIFlowCookieSuccess = () => {
     fetchConnections();
     setShowIFlowCookieModal(false);
+  };
+
+  const handleCodexImportClick = () => {
+    setCodexImportMessage("");
+    codexImportInputRef.current?.click();
+  };
+
+  const handleCodexImportFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setImportingCodexAccounts(true);
+    setCodexImportMessage("");
+
+    try {
+      const text = await file.text();
+      let payload;
+      try {
+        payload = JSON.parse(text);
+      } catch {
+        setCodexImportMessage("Import failed: invalid JSON file");
+        return;
+      }
+
+      const res = await fetch("/api/oauth/codex/import-accounts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const detail = data.errors?.[0]?.error ? `: ${data.errors[0].error}` : "";
+        setCodexImportMessage(`${data.error || "Import failed"}${detail}`);
+        return;
+      }
+
+      await fetchConnections();
+      const skipped = data.skipped ? `, ${data.skipped} skipped` : "";
+      setCodexImportMessage(`Imported ${data.imported || 0}/${data.total || 0} Codex account(s)${skipped}.`);
+    } catch (error) {
+      console.log("Error importing Codex accounts:", error);
+      setCodexImportMessage("Import failed");
+    } finally {
+      setImportingCodexAccounts(false);
+    }
   };
 
   const handleSaveApiKey = async (formData) => {
@@ -1231,6 +1281,22 @@ export default function ProviderDetailPage() {
         <NoAuthProxyCard providerId={providerId} />
       ) : (
         <Card>
+          {providerId === "codex" && (
+            <>
+              <input
+                ref={codexImportInputRef}
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleCodexImportFile}
+              />
+              {codexImportMessage && (
+                <div className={`mb-4 rounded-lg border px-3 py-2 text-xs ${codexImportMessage.startsWith("Imported") ? "border-green-500/30 bg-green-500/10 text-green-600 dark:text-green-400" : "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400"}`}>
+                  {codexImportMessage}
+                </div>
+              )}
+            </>
+          )}
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold">Connections</h2>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -1339,6 +1405,17 @@ export default function ProviderDetailPage() {
                         Cookie
                       </Button>
                     )}
+                    {providerId === "codex" && (
+                      <Button
+                        size="sm"
+                        icon="upload_file"
+                        variant="secondary"
+                        onClick={handleCodexImportClick}
+                        disabled={importingCodexAccounts}
+                      >
+                        {importingCodexAccounts ? "Importing..." : "Import Accounts"}
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       icon="add"
@@ -1404,14 +1481,28 @@ export default function ProviderDetailPage() {
                       </Button>
                     </>
                   ) : (
-                    <Button
-                      size="sm"
-                      icon="add"
-                      onClick={triggerAddConnection}
-                      className="w-full sm:w-auto"
-                    >
-                      Add
-                    </Button>
+                    <>
+                      {providerId === "codex" && (
+                        <Button
+                          size="sm"
+                          icon="upload_file"
+                          variant="secondary"
+                          onClick={handleCodexImportClick}
+                          disabled={importingCodexAccounts}
+                          className="w-full sm:w-auto"
+                        >
+                          {importingCodexAccounts ? "Importing..." : "Import Accounts"}
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        icon="add"
+                        onClick={triggerAddConnection}
+                        className="w-full sm:w-auto"
+                      >
+                        Add
+                      </Button>
+                    </>
                   )}
                 </div>
               )}
