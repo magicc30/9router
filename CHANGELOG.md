@@ -38,6 +38,7 @@
 
 ## Improvements
 - Codex: trim sunset models, keep gpt-5.5 / gpt-5.4 / gpt-5.3-codex family, add gpt-5.4-mini
+- Pricing: refresh confirmed OpenAI GPT-5.4/5.5, Anthropic Claude Opus 4.1/4.7/4.8, and Gemini 3.1/3.5 rates
 - volcengine-ark: refresh model list (add DeepSeek-V4-Flash/Pro, drop EOL entries)
 - Lower stream stall timeout 35s → 30s for faster hang detection
 
