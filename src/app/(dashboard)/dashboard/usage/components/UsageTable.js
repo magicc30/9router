@@ -59,8 +59,17 @@ function ValueCells({ item, viewMode, isSummary = false }) {
       <td className="px-6 py-3 text-right text-text-muted">
         {isSummary && item.inputCost === undefined ? "—" : fmtCost(item.inputCost)}
       </td>
+      <td className="px-6 py-3 text-right text-primary">
+        {isSummary && item.cacheReadCost === undefined ? "—" : fmtCost(item.cacheReadCost)}
+      </td>
+      <td className="px-6 py-3 text-right text-text-muted">
+        {isSummary && item.cacheCreationCost === undefined ? "—" : fmtCost(item.cacheCreationCost)}
+      </td>
       <td className="px-6 py-3 text-right text-text-muted">
         {isSummary && item.outputCost === undefined ? "—" : fmtCost(item.outputCost)}
+      </td>
+      <td className="px-6 py-3 text-right text-text-muted">
+        {isSummary && item.reasoningCost === undefined ? "—" : fmtCost(item.reasoningCost)}
       </td>
       <td className="px-6 py-3 text-right font-medium text-warning">
         {fmtCost(item.totalCost || item.cost)}
@@ -147,8 +156,11 @@ export default function UsageTable({
       ];
     }
     return [
-      { field: "promptTokens", label: "Input Cost" },
-      { field: "completionTokens", label: "Output Cost" },
+      { field: "inputCost", label: "Input Cost" },
+      { field: "cacheReadCost", label: "Cache Read Cost" },
+      { field: "cacheCreationCost", label: "Cache Create Cost" },
+      { field: "outputCost", label: "Output Cost" },
+      { field: "reasoningCost", label: "Reasoning Cost" },
       { field: "cost", label: "Total Cost" },
     ];
   }, [viewMode]);
